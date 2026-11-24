@@ -1,0 +1,225 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* The shadcn-vue components style states as data-checked / data-open, while
+   reka-ui marks them with data-state="..."; map one onto the other. */
+@custom-variant data-checked (&[data-state=checked]);
+@custom-variant data-unchecked (&[data-state=unchecked]);
+@custom-variant data-open (&[data-state=open]);
+@custom-variant data-closed (&[data-state=closed]);
+
+@theme inline {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-heading: var(--font-display);
+  --color-rule: var(--rule);
+  --color-clay-deep: var(--clay-deep);
+  --color-mango: var(--mango);
+  --color-indigo: var(--indigo);
+  --color-ink: var(--ink);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* CraftCebu palette: atsuete red, clay, mango and indigo on cream paper,
+     taken from hablon weaving and Cebu market colors */
+  --radius: 0.5rem;
+  --background: oklch(0.975 0.009 82);        /* paper #FAF6EE */
+  --foreground: oklch(0.21 0.012 50);         /* ink #1F1A17 */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.012 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.012 60);
+  --primary: oklch(0.52 0.15 35);             /* atsuete red #AE3D24 */
+  --primary-foreground: oklch(0.982 0.006 80);
+  --secondary: oklch(0.955 0.012 75);         /* sand #F3EDE4 */
+  --secondary-foreground: oklch(0.22 0.012 60);
+  --muted: oklch(0.955 0.012 75);
+  --muted-foreground: oklch(0.5 0.02 60);
+  --accent: oklch(0.93 0.02 70);
+  --accent-foreground: oklch(0.22 0.012 60);
+  --destructive: oklch(0.55 0.19 28);
+  --border: oklch(0.89 0.018 75);             /* #E4DACB */
+  --input: oklch(0.86 0.02 75);
+  --ring: oklch(0.52 0.15 35);
+  --rule: oklch(0.78 0.04 75);                /* tan rule lines #C9B79C */
+  --clay-deep: oklch(0.36 0.06 50);           /* clay #59391F */
+  --mango: oklch(0.82 0.13 82);               /* mango #EDB54A */
+  --indigo: oklch(0.33 0.07 255);             /* indigo dye #233A63 */
+  --ink: oklch(0.17 0.01 50);                 /* footer ink #141110 */
+  --chart-1: oklch(0.52 0.15 35);
+  --chart-2: oklch(0.62 0.1 60);
+  --chart-3: oklch(0.75 0.06 75);
+  --chart-4: oklch(0.55 0.05 140);
+  --chart-5: oklch(0.35 0.03 60);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.22 0.012 60);
+  --sidebar-primary: oklch(0.52 0.15 35);
+  --sidebar-primary-foreground: oklch(0.982 0.006 80);
+  --sidebar-accent: oklch(0.955 0.012 75);
+  --sidebar-accent-foreground: oklch(0.22 0.012 60);
+  --sidebar-border: oklch(0.89 0.018 75);
+  --sidebar-ring: oklch(0.52 0.15 35);
+}
+
+.dark {
+  --background: oklch(0.2 0.012 60);
+  --foreground: oklch(0.95 0.01 80);
+  --card: oklch(0.24 0.014 60);
+  --card-foreground: oklch(0.95 0.01 80);
+  --popover: oklch(0.24 0.014 60);
+  --popover-foreground: oklch(0.95 0.01 80);
+  --primary: oklch(0.72 0.08 65);
+  --primary-foreground: oklch(0.2 0.012 60);
+  --secondary: oklch(0.28 0.015 60);
+  --secondary-foreground: oklch(0.95 0.01 80);
+  --muted: oklch(0.28 0.015 60);
+  --muted-foreground: oklch(0.72 0.02 70);
+  --accent: oklch(0.3 0.02 60);
+  --accent-foreground: oklch(0.95 0.01 80);
+  --destructive: oklch(0.7 0.17 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.72 0.08 65);
+  --rule: oklch(1 0 0 / 20%);
+  --clay-deep: oklch(0.3 0.05 52);
+  --mango: oklch(0.8 0.12 82);
+  --indigo: oklch(0.6 0.08 255);
+  --ink: oklch(0.15 0.01 50);
+  --chart-1: oklch(0.72 0.08 65);
+  --chart-2: oklch(0.62 0.1 60);
+  --chart-3: oklch(0.75 0.06 75);
+  --chart-4: oklch(0.6 0.05 140);
+  --chart-5: oklch(0.85 0.02 70);
+  --sidebar: oklch(0.24 0.014 60);
+  --sidebar-foreground: oklch(0.95 0.01 80);
+  --sidebar-primary: oklch(0.72 0.08 65);
+  --sidebar-primary-foreground: oklch(0.2 0.012 60);
+  --sidebar-accent: oklch(0.3 0.02 60);
+  --sidebar-accent-foreground: oklch(0.95 0.01 80);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.72 0.08 65);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* A grid with no column count gets one column that can't grow past its
+     container. Without this the implicit column sizes to its widest content,
+     so one long name in a list makes the whole page wider than a phone screen.
+     Column utilities (grid-cols-*, sm:grid-cols-*) still override this. */
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html {
+    /* Same color as the page, so overscroll in a WebView never shows white */
+    background-color: var(--background);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  /* No double-tap zoom delay on taps */
+  a, button, input, select, textarea, label, [role="button"], [role="tab"] {
+    touch-action: manipulation;
+  }
+  /* iOS zooms into any field whose text is under 16px; keep fields at 16px on phones */
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: max(16px, 1em) !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small uppercase, widely spaced label used for kickers and tags */
+  .caps {
+    @apply text-[0.7rem] font-semibold tracking-[0.18em] uppercase;
+  }
+  .arch {
+    @apply overflow-hidden rounded-t-[999px] rounded-b-lg;
+  }
+  /* Hablon: the striped hand-loomed cloth of Argao, used as the brand motif */
+  .hablon {
+    background-image: repeating-linear-gradient(90deg,
+      var(--primary) 0 14px, var(--background) 14px 17px,
+      var(--mango) 17px 25px, var(--background) 25px 28px,
+      var(--indigo) 28px 44px, var(--background) 44px 47px,
+      var(--clay-deep) 47px 55px, var(--mango) 55px 58px,
+      var(--primary) 58px 62px, var(--background) 62px 66px);
+  }
+  .hablon-v {
+    background-image: repeating-linear-gradient(180deg,
+      var(--primary) 0 14px, var(--background) 14px 17px,
+      var(--mango) 17px 25px, var(--background) 25px 28px,
+      var(--indigo) 28px 44px, var(--background) 44px 47px,
+      var(--clay-deep) 47px 55px, var(--mango) 55px 58px,
+      var(--primary) 58px 62px, var(--background) 62px 66px);
+  }
+  .clay-panel {
+    background-color: var(--clay-deep);
+    color: oklch(0.97 0.01 80);
+  }
+  /* Vertical label running down a photo's edge */
+  .side-label {
+    writing-mode: vertical-rl;
+    @apply rounded-sm border border-current px-1 py-2 text-[0.65rem] font-semibold tracking-[0.25em] uppercase;
+  }
+}
+
+@layer utilities {
+  /* Safe-area padding for notches and home indicators in a WebView */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pb-safe-4 { padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+}
