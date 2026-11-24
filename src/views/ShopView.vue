@@ -225,7 +225,7 @@ const selectedCraft = computed(() => facets.value.categories.find(c => c.slug ==
         <h2 id="makers-heading" class="font-display text-2xl font-medium sm:text-3xl">Meet the makers</h2>
         <RouterLink to="/artisans" class="flex shrink-0 items-center gap-1 text-sm font-medium text-primary">All makers <ArrowRightIcon class="size-4" /></RouterLink>
       </div>
-      <ul class="-mx-4 mt-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+      <ul class="-mx-4 mt-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
         <li v-for="m in makers" :key="m.id" class="w-56 shrink-0 snap-start sm:w-64">
           <RouterLink :to="`/artisans/${m.slug}`" class="group relative block overflow-hidden rounded-2xl">
             <img :src="m.photo_url ?? images.weavingHands" :alt="m.shop_name" class="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-105">
