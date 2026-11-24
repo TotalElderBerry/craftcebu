@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BrandLogo from '@/components/BrandLogo.vue'
 import MobileMenu from '@/components/MobileMenu.vue'
+import MobileTabBar from '@/components/MobileTabBar.vue'
 import SetupNotice from '@/components/SetupNotice.vue'
 import SiteFooter from '@/components/SiteFooter.vue'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,9 @@ function submitSearch() {
 // On the home page the header floats over the clay hero in light text.
 const overHero = computed(() => route.name === 'home')
 
+// Pages with their own bottom action bar (buy, pay) don't show the tab bar.
+const showTabBar = computed(() => !['product', 'checkout', 'mock-pay', 'maya-return'].includes(String(route.name)))
+
 const links = [
   { label: 'Shop', to: '/shop' },
   { label: 'Towns', to: '/origins' },
@@ -35,7 +39,7 @@ const links = [
 </script>
 
 <template>
-  <div class="flex min-h-svh flex-col">
+  <div :class="cn('flex min-h-svh flex-col', showTabBar && 'pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0')">
     <SetupNotice />
     <header :class="cn('pt-safe z-40 w-full', overHero ? 'absolute inset-x-0 text-[oklch(0.97_0.012_80)]' : 'sticky top-0 border-b bg-background/95 backdrop-blur')">
       <div :class="cn('mx-auto flex max-w-6xl items-center gap-6 px-4', overHero ? 'h-20 px-6' : 'h-16')">
@@ -70,5 +74,6 @@ const links = [
     </main>
 
     <SiteFooter />
+    <MobileTabBar v-if="showTabBar" />
   </div>
 </template>
