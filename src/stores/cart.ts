@@ -101,5 +101,8 @@ export const useCartStore = defineStore('cart', () => {
     return dropped
   }
 
-  return { lines, count, shops, subtotal, add, setQty, remove, removeMany, refresh }
+  // Filled in when the cart moves to Supabase.
+  async function reload() {}
+
+  return { lines, count, shops, subtotal, add, setQty, remove, removeMany, refresh, reload }
 })

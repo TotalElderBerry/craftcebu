@@ -3,7 +3,12 @@ import type { Profile, UserRole } from '@/types/database'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
+import { inApp, onAppSession, postToNative } from '@/lib/app/bridge'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+
+// How long the first page waits for the phone app's session before it
+// carries on signed out.
+const APP_SESSION_WAIT_MS = 3000
 
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<Session | null>(null)
@@ -27,7 +32,8 @@ export const useAuthStore = defineStore('auth', () => {
       .single()
     if (error) console.error('Could not load profile', error)
     if (data?.is_banned) {
-      await supabase.auth.signOut()
+      if (inApp) postToNative({ type: 'signOut' })
+      else await supabase.auth.signOut()
       session.value = null
       profile.value = null
       toast.error('This account has been suspended. Email hello@craftcebu.test if you think this is a mistake.')
@@ -42,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
   // can wait for it instead of redirecting a signed-in user to /login.
   function init() {
     if (initPromise) return initPromise
-    initPromise = (async () => {
+    initPromise = inApp ? initFromApp() : (async () => {
       if (isSupabaseConfigured) {
         const { data } = await supabase.auth.getSession()
         session.value = data.session
@@ -58,7 +64,35 @@ export const useAuthStore = defineStore('auth', () => {
     return initPromise
   }
 
+  // In the phone app the session comes from the app, never from supabase.auth
+  // (which the app-mode client switches off).
+  function initFromApp() {
+    return new Promise<void>((resolve) => {
+      const finish = () => {
+        ready.value = true
+        resolve()
+      }
+      const timer = setTimeout(finish, APP_SESSION_WAIT_MS)
+      let first = true
+      onAppSession(async (payload) => {
+        const changedUser = payload?.user.id !== session.value?.user.id
+        session.value = payload as unknown as Session | null
+        if (changedUser || !profile.value) await loadProfile()
+        if (first) {
+          first = false
+          clearTimeout(timer)
+          finish()
+        }
+      })
+    })
+  }
+
+  function appOnly(): never {
+    throw new Error('Use the app\'s sign-in.')
+  }
+
   async function signIn(email: string, password: string) {
+    if (inApp) appOnly()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     session.value = data.session
@@ -68,6 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Returns true when the account needs email confirmation before signing in.
   async function signUp(fullName: string, email: string, password: string) {
+    if (inApp) appOnly()
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -80,12 +115,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    if (inApp) postToNative({ type: 'signOut' })
+    else await supabase.auth.signOut()
     session.value = null
     profile.value = null
   }
 
   async function sendPasswordReset(email: string) {
+    if (inApp) appOnly()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
@@ -93,6 +130,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function updatePassword(password: string) {
+    if (inApp) appOnly()
     const { error } = await supabase.auth.updateUser({ password })
     if (error) throw error
   }
