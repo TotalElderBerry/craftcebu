@@ -6,6 +6,7 @@ import { toast } from 'vue-sonner'
 import EmptyState from '@/components/catalog/EmptyState.vue'
 import QtyStepper from '@/components/QtyStepper.vue'
 import { Button } from '@/components/ui/button'
+import { removedNotice } from '@/lib/cartMerge'
 import { fetchProductsByIds, fetchShippingFee } from '@/lib/catalog'
 import { peso } from '@/lib/format'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -24,8 +25,8 @@ onMounted(async () => {
     await cart.whenLoaded()
     const [fresh, fee] = await Promise.all([fetchProductsByIds(cart.lines.map(l => l.productId)), fetchShippingFee()])
     shippingFee.value = fee
-    const dropped = cart.refresh(fresh)
-    if (dropped.length) toast.warning(`Removed from your cart because they're no longer available: ${dropped.join(', ')}`)
+    const notice = removedNotice(cart.refresh(fresh), cart.takeHiddenRemoved())
+    if (notice) toast.warning(notice)
   }
   finally {
     refreshing.value = false

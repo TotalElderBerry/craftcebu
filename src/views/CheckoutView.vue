@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import AddressForm from '@/components/AddressForm.vue'
 import { Button } from '@/components/ui/button'
+import { removedNotice } from '@/lib/cartMerge'
 import { fetchProductsByIds, fetchShippingFee } from '@/lib/catalog'
 import { peso } from '@/lib/format'
 import { addAddress, fetchAddresses, placeOrder, startMayaCheckout } from '@/lib/orders'
@@ -28,12 +29,14 @@ const placing = ref(false)
 const loading = ref(true)
 
 onMounted(async () => {
+  // A signed-in cart loads from the database (right after signing in, it may
+  // still be merging the guest cart), so wait before deciding it is empty.
+  await cart.whenLoaded()
   if (!cart.lines.length) {
     router.replace('/cart')
     return
   }
   try {
-    await cart.whenLoaded()
     const [list, fee, fresh] = await Promise.all([
       fetchAddresses(auth.user!.id),
       fetchShippingFee(),
@@ -43,8 +46,8 @@ onMounted(async () => {
     addressId.value = list[0]?.id ?? null
     addingAddress.value = !list.length
     shippingFee.value = fee
-    const dropped = cart.refresh(fresh)
-    if (dropped.length) toast.warning(`Removed because they're no longer available: ${dropped.join(', ')}`)
+    const notice = removedNotice(cart.refresh(fresh), cart.takeHiddenRemoved())
+    if (notice) toast.warning(notice)
   }
   finally {
     loading.value = false

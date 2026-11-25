@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { inApp, postToNative } from '@/lib/app/bridge'
 import { addToCart, fetchCartLines, removeCartItems, setCartQty, toCartLine } from '@/lib/cart'
+import { mergeGuestLines } from '@/lib/cartMerge'
 import { useAuthStore } from '@/stores/auth'
 
 // A snapshot for showing the cart quickly; the cart page refreshes prices and
@@ -176,11 +177,21 @@ export const useCartStore = defineStore('cart', () => {
 
   let loading: Promise<void> = Promise.resolve()
 
+  // Rows dropped on load because their product can no longer be read (hidden
+  // or removed by its shop); the cart and checkout pages say how many.
+  let hiddenRemoved = 0
+  function takeHiddenRemoved() {
+    const n = hiddenRemoved
+    hiddenRemoved = 0
+    return n
+  }
+
   async function load() {
     const { lines: fresh, unavailable } = await fetchCartLines()
     remote.value = fresh
     if (unavailable.length) {
       await removeCartItems(unavailable)
+      hiddenRemoved += unavailable.length
       changed()
     }
   }
@@ -191,12 +202,21 @@ export const useCartStore = defineStore('cart', () => {
     return loading
   }
 
-  // A guest cart saved in this browser joins the account on sign-in.
+  // A guest cart saved in this browser joins the account on sign-in. It is
+  // read fresh and cleared before any request, so another open tab (or web
+  // view) signing in at the same moment finds nothing left to add twice.
   async function mergeThenLoad() {
-    const saved = local.value
+    const saved = readSaved()
     if (saved.length) {
-      await Promise.allSettled(saved.map(l => addToCart(l.productId, l.qty)))
       local.value = []
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+      catch {
+        // Blocked storage; the in-memory guest cart is already empty.
+      }
+      // Lines that hit a network error stay for the next sign-in.
+      local.value = await mergeGuestLines(saved, addToCart)
       changed()
     }
     await load()
@@ -215,5 +235,5 @@ export const useCartStore = defineStore('cart', () => {
     await loading
   }
 
-  return { lines, count, shops, subtotal, add, setQty, remove, removeMany, refresh, reload, whenLoaded }
+  return { lines, count, shops, subtotal, add, setQty, remove, removeMany, refresh, reload, whenLoaded, takeHiddenRemoved }
 })
