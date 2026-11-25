@@ -30,11 +30,11 @@ class FakeWebTab implements WebTabDriver {
   void dispose() {}
 }
 
-Future<FakeWebTab> pumpShell(WidgetTester tester, {CartRepo? cart}) async {
+Future<FakeWebTab> pumpShell(WidgetTester tester, {CartRepo? cart, FakeSession? session}) async {
   final web = FakeWebTab();
   await tester.pumpWidget(MaterialApp(
     theme: craftCebuTheme(),
-    home: TabShell(services: fakeServices(cart: cart), webTabFactory: (BridgeHandlers _) => web),
+    home: TabShell(services: fakeServices(cart: cart, session: session), webTabFactory: (BridgeHandlers _) => web),
   ));
   await tester.pump();
   return web;
@@ -73,5 +73,22 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
     expect(web.paths, ['/cart', '/artisans/lola']);
+  });
+
+  testWidgets('signing out takes web tabs back to their public pages', (tester) async {
+    final session = FakeSession(signedInAs: 'u1');
+    final web = await pumpShell(tester, session: session);
+    await tester.tap(find.text('Orders'));
+    await tester.pumpAndSettle();
+    await web.navigate('/orders/abc');
+    web.paths.clear();
+    await session.signOut();
+    await tester.pumpAndSettle();
+    expect(web.paths, ['/']);
+    await tester.tap(find.text('Orders'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(web.paths, isNot(contains('/orders/abc')));
   });
 }

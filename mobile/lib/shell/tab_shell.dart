@@ -78,6 +78,7 @@ class _TabShellState extends State<TabShell> implements ShellActions {
   final _lastPath = <AppTab, String>{};
 
   AppServices get _services => widget.services;
+  late bool _wasSignedIn;
 
   @override
   void initState() {
@@ -89,13 +90,29 @@ class _TabShellState extends State<TabShell> implements ShellActions {
       onCartChanged: _services.refreshCartCount,
     );
     _web = widget.webTabFactory?.call(handlers) ?? LiveWebTab(_services.session, handlers);
-    _services.session.addListener(_services.refreshCartCount);
+    _wasSignedIn = _services.session.signedIn;
+    _services.session.addListener(_onSessionChanged);
     _services.refreshCartCount();
+  }
+
+  void _onSessionChanged() {
+    _services.refreshCartCount();
+    final signedIn = _services.session.signedIn;
+    if (_wasSignedIn && !signedIn) {
+      // The web view may still show a private page (an order, the cart);
+      // after signing out, nothing of the last shopper's stays on screen.
+      _lastPath.clear();
+      _services.lastCartQty.clear();
+      _webShowing = AppTab.home;
+      if (_webRoots.containsKey(_tab)) setState(() => _tab = AppTab.home);
+      unawaited(_web.navigate('/'));
+    }
+    _wasSignedIn = signedIn;
   }
 
   @override
   void dispose() {
-    _services.session.removeListener(_services.refreshCartCount);
+    _services.session.removeListener(_onSessionChanged);
     _web.dispose();
     super.dispose();
   }
