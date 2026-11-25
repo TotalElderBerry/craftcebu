@@ -4,6 +4,10 @@ import 'package:craftcebu_mobile/data/models.dart';
 import 'package:craftcebu_mobile/data/wishlist_repo.dart';
 import 'package:craftcebu_mobile/session/app_session.dart';
 import 'package:craftcebu_mobile/shell/services.dart';
+import 'package:craftcebu_mobile/shell/tab_shell.dart';
+import 'package:craftcebu_mobile/theme.dart';
+import 'package:craftcebu_mobile/web/bridge.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -134,3 +138,45 @@ AppServices fakeServices({AppSession? session, CartRepo? cart, CatalogRepo? cata
       catalog: catalog ?? FakeCatalog(),
       wishlist: wishlist ?? FakeWishlist(),
     );
+
+/// Records what a screen asked the shell to do, in order, in [log].
+class FakeActions implements ShellActions {
+  FakeActions({this.session, this.signInSucceeds = true});
+
+  final FakeSession? session;
+  final bool signInSucceeds;
+  final log = <String>[];
+
+  @override
+  void switchTo(AppTab tab) => log.add('switchTo ${tab.name}');
+  @override
+  void openShop(OpenShop filters) => log.add('openShop');
+  @override
+  Future<void> openProduct(String slug) async => log.add('openProduct $slug');
+  @override
+  void showWebPath(String path) => log.add('showWebPath $path');
+  @override
+  Future<bool> requireSignIn() async {
+    log.add('requireSignIn');
+    if (session?.signedIn ?? false) return true;
+    if (signInSucceeds) session?.signedInAs = 'u1';
+    return signInSucceeds;
+  }
+
+  @override
+  void openWebPage(String path) => log.add('openWebPage $path');
+}
+
+/// Puts a native screen inside the shell's scope, with fakes.
+Widget inShell(Widget child, {required AppServices services, required ShellActions actions}) => MaterialApp(
+      theme: craftCebuTheme(),
+      home: TabShellScope(actions: actions, services: services, child: Scaffold(body: child)),
+    );
+
+/// A phone-sized but tall screen, so lazily built grids show every card.
+Future<void> pumpTall(WidgetTester tester, Widget app) async {
+  await tester.binding.setSurfaceSize(const Size(400, 2400));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(app);
+  await tester.pumpAndSettle();
+}

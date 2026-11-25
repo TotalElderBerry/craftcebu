@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../screens/shop/shop_screen.dart';
 import '../theme.dart';
 import '../web/bridge.dart';
 import 'live_web_tab.dart';
@@ -65,6 +66,7 @@ class TabShell extends StatefulWidget {
 
 class _TabShellState extends State<TabShell> implements ShellActions {
   late final WebTabDriver _web;
+  final _shopKey = GlobalKey<ShopScreenState>();
   AppTab _tab = AppTab.home;
 
   // Which web tab the web view is showing, and where each one was left.
@@ -129,8 +131,8 @@ class _TabShellState extends State<TabShell> implements ShellActions {
 
   @override
   void openShop(OpenShop filters) {
-    // The native Shop screen takes filters from Task 10 on.
     switchTo(AppTab.shop);
+    _shopKey.currentState?.applyFilters(filters);
   }
 
   @override
@@ -189,7 +191,7 @@ class _TabShellState extends State<TabShell> implements ShellActions {
               index: _stackIndex,
               children: [
                 SafeArea(bottom: false, child: _web.build(context)),
-                const Center(key: ValueKey('shop-screen'), child: Text('Shop')),
+                KeyedSubtree(key: const ValueKey('shop-screen'), child: ShopScreen(key: _shopKey)),
                 const Center(key: ValueKey('account-screen'), child: Text('Account')),
               ],
             ),

@@ -18,6 +18,10 @@ class AppServices {
   /// Pieces in the cart, shown on the Cart tab.
   final cartCount = ValueNotifier<int>(0);
 
+  /// The quantity add_to_cart last returned for each product, so a tap that
+  /// can't add more (stock reached) can say so.
+  final lastCartQty = <String, int>{};
+
   Future<void> refreshCartCount() async {
     try {
       cartCount.value = await cart.pieceCount();
