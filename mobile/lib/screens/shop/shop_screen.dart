@@ -248,7 +248,7 @@ class ShopScreenState extends State<ShopScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 24,
-                    childAspectRatio: 0.52,
+                    childAspectRatio: 0.55,
                   ),
                   itemCount: _products.isEmpty && _loading ? 4 : _products.length,
                   itemBuilder: (context, i) {

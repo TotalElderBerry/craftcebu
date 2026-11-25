@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../screens/product/product_screen.dart';
 import '../screens/shop/shop_screen.dart';
 import '../theme.dart';
 import '../web/bridge.dart';
@@ -135,12 +136,14 @@ class _TabShellState extends State<TabShell> implements ShellActions {
     _shopKey.currentState?.applyFilters(filters);
   }
 
+  // Pushed routes sit above the shell in the navigator, so they get the
+  // shell's scope passed along.
+  Future<T?> _push<T>(Widget screen) => Navigator.of(context).push(MaterialPageRoute<T>(
+        builder: (_) => TabShellScope(actions: this, services: _services, child: screen),
+      ));
+
   @override
-  Future<void> openProduct(String slug) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => Scaffold(appBar: AppBar(), body: Center(child: Text(slug))),
-    ));
-  }
+  Future<void> openProduct(String slug) => _push<void>(ProductScreen(slug: slug));
 
   @override
   Future<bool> requireSignIn() async => _services.session.signedIn;

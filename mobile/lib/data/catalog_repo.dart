@@ -92,10 +92,10 @@ class CatalogRepo {
     return rows.map(ArtisanSummary.fromJson).toList();
   }
 
-  /// Other pieces in the same craft.
+  /// Pieces in the same craft from other shops (as on the site).
   Future<List<Product>> fetchRelated(Product p) async {
     if (p.categoryId == null) return [];
-    final rows = await _visible(_productSelect).eq('category_id', p.categoryId!).neq('id', p.id).order('created_at', ascending: false).limit(8);
+    final rows = await _visible(_productSelect).eq('category_id', p.categoryId!).neq('artisan_id', p.artisan.id).order('created_at', ascending: false).limit(8);
     return _withRatings(rows.map(Product.fromJson).toList());
   }
 
