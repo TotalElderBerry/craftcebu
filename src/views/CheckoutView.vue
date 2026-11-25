@@ -33,6 +33,7 @@ onMounted(async () => {
     return
   }
   try {
+    await cart.whenLoaded()
     const [list, fee, fresh] = await Promise.all([
       fetchAddresses(auth.user!.id),
       fetchShippingFee(),

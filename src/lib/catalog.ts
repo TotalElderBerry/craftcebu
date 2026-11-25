@@ -30,7 +30,7 @@ async function withRatings(products: CatalogProduct[]) {
 
 // Inner joins keep only products whose artisan is verified (and, when filtering,
 // whose category matches); RLS enforces the same rule for the public.
-const productSelect = `
+export const productSelect = `
   *,
   artisan:artisans!inner(id, shop_name, slug, status, town_id, story, craft_since, photo_url, town:towns(id, name)),
   category:categories(name, slug),

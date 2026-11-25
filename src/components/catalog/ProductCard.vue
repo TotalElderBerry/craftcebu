@@ -22,12 +22,12 @@ const inCart = computed(() => cart.lines.find(l => l.productId === props.product
 const canAdd = computed(() => props.product.stock > inCart.value)
 
 // One tap adds a single piece, like a shopping app's "+" button.
-function quickAdd() {
+async function quickAdd() {
   if (!canAdd.value) {
     toast.info(props.product.stock === 0 ? 'This piece is sold out.' : 'You already have every available piece in your cart.')
     return
   }
-  cart.add(props.product, 1)
+  if (!await cart.add(props.product, 1)) return
   toast.success(`Added ${props.product.name}`, { action: { label: 'View cart', onClick: () => router.push('/cart') } })
 }
 </script>

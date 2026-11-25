@@ -21,6 +21,7 @@ const refreshing = ref(true)
 onMounted(async () => {
   if (!isSupabaseConfigured) return
   try {
+    await cart.whenLoaded()
     const [fresh, fee] = await Promise.all([fetchProductsByIds(cart.lines.map(l => l.productId)), fetchShippingFee()])
     shippingFee.value = fee
     const dropped = cart.refresh(fresh)
@@ -43,11 +44,11 @@ function checkout() {
   <div class="mx-auto max-w-6xl px-4 py-10">
     <h1 class="font-display text-4xl font-medium sm:text-5xl">Your cart</h1>
 
-    <EmptyState v-if="!cart.lines.length" class="mt-8" title="Walay sulod · Your cart is empty" body="Find something made by hand in Cebu.">
+    <EmptyState v-if="!cart.lines.length && !refreshing" class="mt-8" title="Walay sulod · Your cart is empty" body="Find something made by hand in Cebu.">
       <Button as-child><RouterLink to="/shop"><ShoppingBagIcon /> Shop the crafts</RouterLink></Button>
     </EmptyState>
 
-    <div v-else class="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_340px]">
+    <div v-else-if="cart.lines.length" class="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_340px]">
       <div class="grid gap-5">
         <section v-for="group in cart.shops" :key="group.artisan.id" class="rounded-2xl border bg-card">
           <header class="flex items-center justify-between gap-3 border-b px-5 py-3">

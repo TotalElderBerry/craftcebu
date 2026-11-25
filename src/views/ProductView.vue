@@ -50,14 +50,15 @@ const stockLabel = computed(() => {
   return { text: 'In stock', tone: 'bg-[oklch(0.93_0.06_150)] text-[oklch(0.4_0.1_150)]' }
 })
 
-function addToCart() {
-  if (!product.value) return
+async function addToCart() {
+  const piece = product.value
+  if (!piece) return
   if (room.value <= 0) {
     toast.info('You already have all the available pieces in your cart.')
     return
   }
-  cart.add(product.value, Math.min(qty.value, room.value))
-  toast.success(`Added ${product.value.name} to your cart`, { action: { label: 'View cart', onClick: () => router.push('/cart') } })
+  if (!await cart.add(piece, Math.min(qty.value, room.value))) return
+  toast.success(`Added ${piece.name} to your cart`, { action: { label: 'View cart', onClick: () => router.push('/cart') } })
 }
 
 async function share() {
