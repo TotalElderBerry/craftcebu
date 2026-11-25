@@ -1,0 +1,24 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../data/cart_repo.dart';
+import '../session/app_session.dart';
+
+/// Everything the native screens talk to, passed down so tests can swap in
+/// fakes.
+class AppServices {
+  AppServices({required this.session, required this.cart});
+
+  final AppSession session;
+  final CartRepo cart;
+
+  /// Pieces in the cart, shown on the Cart tab.
+  final cartCount = ValueNotifier<int>(0);
+
+  Future<void> refreshCartCount() async {
+    try {
+      cartCount.value = await cart.pieceCount();
+    } catch (_) {
+      // Keep the last count when offline.
+    }
+  }
+}
