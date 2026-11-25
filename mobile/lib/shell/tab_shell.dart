@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../screens/account/account_screen.dart';
+import '../screens/account/sign_in_screen.dart';
 import '../screens/product/product_screen.dart';
 import '../screens/shop/shop_screen.dart';
+import '../screens/web_page_screen.dart';
 import '../theme.dart';
 import '../web/bridge.dart';
 import 'live_web_tab.dart';
@@ -146,10 +149,14 @@ class _TabShellState extends State<TabShell> implements ShellActions {
   Future<void> openProduct(String slug) => _push<void>(ProductScreen(slug: slug));
 
   @override
-  Future<bool> requireSignIn() async => _services.session.signedIn;
+  Future<bool> requireSignIn() async {
+    if (_services.session.signedIn) return true;
+    final signedIn = await _push<bool>(const SignInScreen());
+    return signedIn == true && _services.session.signedIn;
+  }
 
   @override
-  void openWebPage(String path) {}
+  void openWebPage(String path) => unawaited(_push<void>(WebPageScreen(path: path)));
 
   Future<void> _onLoginRequest(String returnTo) async {
     if (await requireSignIn()) showWebPath(returnTo);
@@ -195,7 +202,7 @@ class _TabShellState extends State<TabShell> implements ShellActions {
               children: [
                 SafeArea(bottom: false, child: _web.build(context)),
                 KeyedSubtree(key: const ValueKey('shop-screen'), child: ShopScreen(key: _shopKey)),
-                const Center(key: ValueKey('account-screen'), child: Text('Account')),
+                const AccountScreen(key: ValueKey('account-screen')),
               ],
             ),
             bottomNavigationBar: ValueListenableBuilder(
