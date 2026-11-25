@@ -136,17 +136,27 @@ Set `SITE_URL` (Supabase secret) to the deployed HTTPS address the app loads, so
 
 ## Mobile app (Flutter)
 
-`mobile/` is a Flutter app that shows the live site (`https://craftcebu.vercel.app`) in a full-screen web view, so every Vercel deploy reaches the app immediately. The Flutter side adds the native parts: app icon and splash, Android back button and iOS swipe-back, photo picking for uploads on Android, external links (email, phone, wallet apps), a loading bar and an offline screen. Maya's payment pages stay inside the app.
+`mobile/` is the CraftCebu phone app. Browsing is native and the rest is the live site:
 
-It uses only Flutter's official plugins (`webview_flutter`, `url_launcher`, `image_picker`) with Swift Package Manager, so CocoaPods isn't needed.
+- **Native:** the tab bar (Home, Shop, Cart, Orders, Account), the Shop and Product screens, and sign-in. They read Supabase directly with the same rules as the site (active products from verified shops only).
+- **Web:** Home, Cart, Orders and checkout (Maya included) show `https://craftcebu.vercel.app` in one shared web view. Account opens other site pages (Seller Centre, Admin Centre, Edit profile, and so on) full screen.
+- **One login:** the app owns the Supabase session and lends the site short-lived access tokens over a JavaScript bridge (`mobile/lib/web/bridge.dart` and `src/lib/app/bridge.ts`). The site never receives the refresh token. It runs in "app mode" when the user agent contains `CraftCebuApp`: it hides its own header and tab bar, and hands product, shop and sign-in links to the native screens.
+- **One cart:** signed-in carts live in the `cart_items` table (migration `20261129000001_cart.sql`), shared by the app and the site. Guests on the website keep a browser cart that is merged into the account on sign-in. In the app, guests are asked to sign in before adding to the cart.
+
+Setup:
 
 ```bash
 cd mobile
+cp env.example.json env.json   # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from .env.local
 flutter pub get
-flutter run            # pick the iPhone simulator or a connected phone
+flutter run --dart-define-from-file=env.json
 ```
 
-Change the address in `mobile/lib/main.dart` (`homeUrl`). Regenerate icons and splash after editing `mobile/assets/` with `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`.
+`env.json` is gitignored. Set `HOME_URL` to `http://localhost:5173` to try site changes in the app before they deploy (the iPhone simulator reaches your Mac at localhost).
+
+It uses Swift Package Manager, so CocoaPods isn't needed. Fraunces and DM Sans are bundled in `mobile/assets/fonts/` (Open Font License). Regenerate icons and splash after editing `mobile/assets/` with `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`.
+
+Checks: `cd mobile && flutter test && flutter analyze`. On the site side, `node --test tests/web/` covers the token helpers and `npm --prefix supabase/tests test` runs the SQL tests in PGlite (run `npm --prefix supabase/tests install` once).
 
 Android needs Android Studio (for the SDK and an emulator) or a phone with USB debugging.
 
