@@ -134,6 +134,22 @@ What the native shell must provide:
 
 Set `SITE_URL` (Supabase secret) to the deployed HTTPS address the app loads, so Maya returns buyers to it.
 
+## Mobile app (Flutter)
+
+`mobile/` is a Flutter app that shows the live site (`https://craftcebu.vercel.app`) in a full-screen web view, so every Vercel deploy reaches the app immediately. The Flutter side adds the native parts: app icon and splash, Android back button and iOS swipe-back, photo picking for uploads on Android, external links (email, phone, wallet apps), a loading bar and an offline screen. Maya's payment pages stay inside the app.
+
+It uses only Flutter's official plugins (`webview_flutter`, `url_launcher`, `image_picker`) with Swift Package Manager, so CocoaPods isn't needed.
+
+```bash
+cd mobile
+flutter pub get
+flutter run            # pick the iPhone simulator or a connected phone
+```
+
+Change the address in `mobile/lib/main.dart` (`homeUrl`). Regenerate icons and splash after editing `mobile/assets/` with `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`.
+
+Android needs Android Studio (for the SDK and an emulator) or a phone with USB debugging.
+
 ## Project layout
 
 ```
