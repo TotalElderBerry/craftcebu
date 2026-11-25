@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
 import 'data/cart_repo.dart';
+import 'data/catalog_repo.dart';
+import 'data/wishlist_repo.dart';
 import 'session/app_session.dart';
 import 'shell/services.dart';
 import 'shell/tab_shell.dart';
@@ -12,7 +14,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // The key is used as-is, so the legacy anon key works here too.
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
-  runApp(CraftCebuApp(services: AppServices(session: AppSession(), cart: CartRepo())));
+  runApp(CraftCebuApp(services: AppServices(
+    session: AppSession(),
+    cart: CartRepo(),
+    catalog: CatalogRepo(),
+    wishlist: WishlistRepo(),
+  )));
 }
 
 class CraftCebuApp extends StatelessWidget {

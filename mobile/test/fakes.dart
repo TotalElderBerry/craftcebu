@@ -1,4 +1,7 @@
 import 'package:craftcebu_mobile/data/cart_repo.dart';
+import 'package:craftcebu_mobile/data/catalog_repo.dart';
+import 'package:craftcebu_mobile/data/models.dart';
+import 'package:craftcebu_mobile/data/wishlist_repo.dart';
 import 'package:craftcebu_mobile/session/app_session.dart';
 import 'package:craftcebu_mobile/shell/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -66,5 +69,68 @@ class FakeCart implements CartRepo {
   Future<int> pieceCount() async => count;
 }
 
-AppServices fakeServices({AppSession? session, CartRepo? cart}) =>
-    AppServices(session: session ?? FakeSession(), cart: cart ?? FakeCart());
+Product fakeProduct(String id, {int stock = 5, double price = 500, String? category = 'pottery', int? categoryId = 6}) => Product(
+      id: id,
+      name: 'Piece $id',
+      slug: 'piece-$id',
+      description: 'Made by hand.',
+      materials: 'Clay',
+      price: price,
+      stock: stock,
+      categoryId: categoryId,
+      category: category == null ? null : CategoryRef(name: 'Pottery', slug: category),
+      artisan: const ArtisanSummary(id: 'a1', shopName: 'Lola Nena Pottery', slug: 'lola-nena', town: TownRef(id: 4, name: 'Carcar City')),
+    );
+
+class FakeCatalog implements CatalogRepo {
+  FakeCatalog({List<Product>? products, this.reviews = const []}) : products = products ?? [fakeProduct('p1'), fakeProduct('p2')];
+
+  List<Product> products;
+  List<Review> reviews;
+  final filtersSeen = <CatalogFilters>[];
+
+  @override
+  Future<({List<Product> products, int total})> fetchProducts(CatalogFilters f, {int page = 0, int pageSize = 12}) async {
+    filtersSeen.add(f);
+    final pageItems = products.skip(page * pageSize).take(pageSize).toList();
+    return (products: pageItems, total: products.length);
+  }
+
+  @override
+  Future<({List<TownRef> towns, List<CategoryRef> categories})> fetchFacets() async => (
+        towns: const [TownRef(id: 4, name: 'Carcar City'), TownRef(id: 5, name: 'Argao')],
+        categories: const [CategoryRef(id: 6, name: 'Pottery', slug: 'pottery'), CategoryRef(id: 1, name: 'Hablon Weaving', slug: 'hablon-weaving')],
+      );
+
+  @override
+  Future<Product?> fetchProduct(String slug) async => products.where((p) => p.slug == slug).firstOrNull;
+
+  @override
+  Future<List<Review>> fetchReviews(String productId) async => reviews;
+
+  @override
+  Future<List<ArtisanSummary>> fetchMakers() async => [products.first.artisan];
+
+  @override
+  Future<List<Product>> fetchRelated(Product p) async => [];
+
+  @override
+  Future<List<Product>> fetchFromMaker(Product p) async => [];
+}
+
+class FakeWishlist implements WishlistRepo {
+  final saved = <String>{};
+
+  @override
+  Future<Set<String>> savedIds() async => {...saved};
+
+  @override
+  Future<bool> toggleSaved(String productId) async => saved.remove(productId) ? false : saved.add(productId);
+}
+
+AppServices fakeServices({AppSession? session, CartRepo? cart, CatalogRepo? catalog, WishlistRepo? wishlist}) => AppServices(
+      session: session ?? FakeSession(),
+      cart: cart ?? FakeCart(),
+      catalog: catalog ?? FakeCatalog(),
+      wishlist: wishlist ?? FakeWishlist(),
+    );
