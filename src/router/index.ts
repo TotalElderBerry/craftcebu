@@ -1,8 +1,11 @@
+import type { RouteLocationNormalized } from 'vue-router'
+import type { NativeMessage } from '@/lib/app/bridge'
 import type { UserRole } from '@/types/database'
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import SellerLayout from '@/layouts/SellerLayout.vue'
+import { inApp, postToNative } from '@/lib/app/bridge'
 import { useAuthStore } from '@/stores/auth'
 
 declare module 'vue-router' {
@@ -91,9 +94,30 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+const queryText = (v: unknown) => (typeof v === 'string' && v ? v : undefined)
+
+// In the phone app, products, the shop and sign-in are native screens. Returns
+// the navigation result when the app takes over, or undefined to carry on.
+function handOffToApp(to: RouteLocationNormalized, from: RouteLocationNormalized, signedIn: boolean) {
+  let msg: NativeMessage | null = null
+  if (to.name === 'product') msg = { type: 'openProduct', slug: String(to.params.slug) }
+  else if (to.name === 'shop') msg = { type: 'openShop', category: queryText(to.query.category), town: queryText(to.query.town), q: queryText(to.query.q) }
+  else if (to.name === 'login' || to.name === 'register') msg = { type: 'login', returnTo: queryText(to.query.redirect) ?? from.fullPath }
+  else if (to.meta.requiresAuth && !signedIn) msg = { type: 'login', returnTo: to.fullPath }
+  if (!msg) return undefined
+  postToNative(msg)
+  // Cancelling the very first navigation would leave a blank page.
+  return from.matched.length === 0 ? { name: 'home' } : false
+}
+
+router.beforeEach(async (to, from) => {
   const auth = useAuthStore()
   await auth.init()
+
+  if (inApp) {
+    const handOff = handOffToApp(to, from, Boolean(auth.user))
+    if (handOff !== undefined) return handOff
+  }
 
   if (to.meta.guestOnly && auth.user) return { name: auth.isOwner ? 'admin' : 'home' }
 
@@ -106,9 +130,10 @@ router.beforeEach(async (to) => {
   }
 })
 
-router.afterEach((to) => {
+router.afterEach((to, _from, failure) => {
   // Product and artisan pages set their own title once their data loads.
-  if (to.name === 'product' || to.name === 'artisan') return
+  // A cancelled navigation (handed to the phone app) keeps the current title.
+  if (failure || to.name === 'product' || to.name === 'artisan') return
   document.title = to.meta.title ? `${to.meta.title} · CraftCebu` : 'CraftCebu · Handmade in Cebu'
 })
 

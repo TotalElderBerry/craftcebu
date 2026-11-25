@@ -11,7 +11,7 @@ export type NativeMessage =
   | { type: 'signOut' }
   | { type: 'login', returnTo: string }
   | { type: 'openProduct', slug: string }
-  | { type: 'openShop', category?: string, town?: number, q?: string }
+  | { type: 'openShop', category?: string, town?: string, q?: string }
   | { type: 'cartChanged' }
 
 interface AppHandlers {
