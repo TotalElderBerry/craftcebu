@@ -40,6 +40,7 @@ dependencies:
   webview_flutter_wkwebview: ^3.27.2
   url_launcher: ^6.3.3
   image_picker: ^1.2.4
+  supabase_flutter: ^2.18.3
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,15 @@ flutter:
 
   assets:
     - assets/splash.png
+
+  # Bundled so text looks right on a bad connection (Open Font License).
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces.ttf
+    - family: DMSans
+      fonts:
+        - asset: assets/fonts/DMSans.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -5,18 +5,16 @@ import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
-/// The live CraftCebu site. Every Vercel deploy shows up in the app at once.
-const homeUrl = 'https://craftcebu.vercel.app';
+import 'config.dart';
+import 'theme.dart';
 
-// CraftCebu palette (src/style.css).
-const paper = Color(0xFFFAF6EE);
-const ink = Color(0xFF1F1A17);
-const atsuete = Color(0xFFAE3D24);
-
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // The key is used as-is, so the legacy anon key works here too.
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
   runApp(const CraftCebuApp());
 }
 
@@ -28,10 +26,7 @@ class CraftCebuApp extends StatelessWidget {
     return MaterialApp(
       title: 'CraftCebu',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: atsuete, surface: paper),
-        scaffoldBackgroundColor: paper,
-      ),
+      theme: craftCebuTheme(),
       home: const ShellScreen(),
     );
   }
