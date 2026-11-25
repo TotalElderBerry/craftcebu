@@ -25,6 +25,9 @@ abstract interface class WebTabDriver {
   Future<void> reloadCart();
   Future<String?> currentPath();
 
+  /// Lends the page the app's session; true when one was set.
+  Future<bool> pushSession();
+
   /// Steps back a page; false when there is nothing to go back to.
   Future<bool> goBack();
   void dispose();
@@ -175,8 +178,19 @@ class _TabShellState extends State<TabShell> implements ShellActions {
   @override
   void openWebPage(String path) => unawaited(_push<void>(WebPageScreen(path: path)));
 
+  bool _handlingLogin = false;
+
+  // A page asked to sign in. Once the app is signed in, the page gets the
+  // session before it is opened again; if it can't (offline), it isn't
+  // reopened, which would only ask again in a loop.
   Future<void> _onLoginRequest(String returnTo) async {
-    if (await requireSignIn()) showWebPath(returnTo);
+    if (_handlingLogin) return;
+    _handlingLogin = true;
+    try {
+      if (await requireSignIn() && await _web.pushSession()) showWebPath(returnTo);
+    } finally {
+      _handlingLogin = false;
+    }
   }
 
   // Android back: step back in the web view, then go Home, then leave.

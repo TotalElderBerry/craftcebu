@@ -28,7 +28,7 @@ class _WebPageScreenState extends State<WebPageScreen> {
       scope.services.session,
       BridgeHandlers(
         onLogin: (returnTo) async {
-          if (await scope.actions.requireSignIn()) await _web?.navigate(returnTo);
+          if (await scope.actions.requireSignIn() && (await _web?.pushSession() ?? false)) await _web?.navigate(returnTo);
         },
         onOpenProduct: scope.actions.openProduct,
         onOpenShop: (filters) {

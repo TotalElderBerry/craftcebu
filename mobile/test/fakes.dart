@@ -12,12 +12,15 @@ import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FakeSession extends ChangeNotifier implements AppSession {
-  FakeSession({this.signedInAs, this.profile, this.signInError});
+  FakeSession({this.signedInAs, this.profile, this.signInError, this.webPayload});
 
   String? signedInAs;
   @override
   Profile? profile;
   Object? signInError;
+
+  /// What webSessionPayload gives: a map, null (signed out), or an error to throw.
+  Object? webPayload;
   final calls = <String>[];
 
   @override
@@ -53,7 +56,11 @@ class FakeSession extends ChangeNotifier implements AppSession {
   }
 
   @override
-  Future<Map<String, Object?>?> webSessionPayload() async => null;
+  Future<Map<String, Object?>?> webSessionPayload() async {
+    final p = webPayload;
+    if (p is Exception) throw p;
+    return p as Map<String, Object?>?;
+  }
 }
 
 class FakeCart implements CartRepo {

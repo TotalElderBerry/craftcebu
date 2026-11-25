@@ -46,6 +46,12 @@ class LiveWebTab implements WebTabDriver {
   }
 
   @override
+  Future<bool> pushSession() async {
+    await _host;
+    return _bridge!.pushSession();
+  }
+
+  @override
   Future<bool> goBack() async {
     final controller = (await _host).controller;
     if (!await controller.canGoBack()) return false;

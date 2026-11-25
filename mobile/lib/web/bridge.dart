@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../config.dart';
 import '../session/app_session.dart';
 
 /// A message from the site (src/lib/app/bridge.ts) over the CraftCebuNative
@@ -92,6 +93,25 @@ String _navigateScript(String path) => 'window.craftcebu?.navigate(${jsonEncode(
 const _clearSessionScript = 'window.craftcebu?.clearSession()';
 const _reloadCartScript = 'window.craftcebu?.reloadCart()';
 
+/// The script that hands a web view the current session: set it, clear it,
+/// or null to leave the page as it is (the server couldn't be reached).
+Future<String?> sessionScriptFor(AppSession session) async {
+  try {
+    final payload = await session.webSessionPayload();
+    return payload == null ? _clearSessionScript : setSessionScript(payload);
+  } on SessionUnavailable {
+    return null;
+  }
+}
+
+/// True only for pages of the CraftCebu site itself (same scheme, host and
+/// port as [home]). Payment, bank and other pages never get the session.
+bool isSiteUrl(String? url, String home) {
+  final page = url == null ? null : Uri.tryParse(url);
+  final site = Uri.parse(home);
+  return page != null && page.scheme == site.scheme && page.host == site.host && page.port == site.port;
+}
+
 /// Connects one web view to the app: lends it the session, and passes its
 /// requests to the native screens.
 class WebBridge {
@@ -109,7 +129,10 @@ class WebBridge {
 
   void _onSessionChanged() => unawaited(pushSession());
 
+  Future<bool> _onSite() async => isSiteUrl(await controller.currentUrl(), homeUrl);
+
   Future<void> _handle(String raw) async {
+    if (!await _onSite()) return;
     switch (BridgeMessage.parse(raw)) {
       case Ready() || NeedToken():
         await pushSession();
@@ -128,9 +151,13 @@ class WebBridge {
     }
   }
 
-  Future<void> pushSession() async {
-    final payload = await session.webSessionPayload();
-    await _run(payload == null ? _clearSessionScript : setSessionScript(payload));
+  /// Lends the page the current session; true when a session was set.
+  Future<bool> pushSession() async {
+    if (!await _onSite()) return false;
+    final script = await sessionScriptFor(session);
+    if (script == null) return false;
+    await _run(script);
+    return script != _clearSessionScript;
   }
 
   Future<void> navigate(String path) => _run(_navigateScript(path));

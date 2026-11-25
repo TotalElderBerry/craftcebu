@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:craftcebu_mobile/session/app_session.dart';
 import 'package:craftcebu_mobile/web/bridge.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fakes.dart';
 
 void main() {
   test('parses openProduct', () {
@@ -36,5 +39,29 @@ void main() {
     final script = setSessionScript({'access_token': token});
     final arg = RegExp(r'setSession\((.*)\)$').firstMatch(script)!.group(1)!;
     expect((jsonDecode(arg) as Map)['access_token'], token);
+  });
+
+  test('session script sets the session for a signed-in shopper', () async {
+    final script = await sessionScriptFor(FakeSession(webPayload: {'access_token': 't'}));
+    expect(script, startsWith('window.craftcebu?.setSession('));
+  });
+
+  test('session script clears the session when signed out', () async {
+    expect(await sessionScriptFor(FakeSession()), 'window.craftcebu?.clearSession()');
+  });
+
+  test('no session script when a refresh could not reach the server', () async {
+    expect(await sessionScriptFor(FakeSession(webPayload: const SessionUnavailable())), isNull);
+  });
+
+  test('only the CraftCebu site gets the session', () {
+    const home = 'https://craftcebu.vercel.app';
+    expect(isSiteUrl('https://craftcebu.vercel.app/cart', home), isTrue);
+    expect(isSiteUrl('https://craftcebu.vercel.app', home), isTrue);
+    expect(isSiteUrl('https://payments.maya.ph/checkout', home), isFalse);
+    expect(isSiteUrl('https://craftcebu.vercel.app.evil.com/', home), isFalse);
+    expect(isSiteUrl('http://craftcebu.vercel.app/', home), isFalse);
+    expect(isSiteUrl(null, home), isFalse);
+    expect(isSiteUrl('http://localhost:5173/orders', 'http://localhost:5173'), isTrue);
   });
 }

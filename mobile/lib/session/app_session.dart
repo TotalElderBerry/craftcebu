@@ -13,6 +13,12 @@ class Profile {
   final String? artisanStatus; // pending, verified, rejected, suspended, or null with no shop
 }
 
+/// The session couldn't be refreshed because the server was out of reach.
+/// The shopper is still signed in; web views keep what they have for now.
+class SessionUnavailable implements Exception {
+  const SessionUnavailable();
+}
+
 class BannedException implements Exception {
   @override
   String toString() => 'This account has been suspended. Email hello@craftcebu.test if you think this is a mistake.';
@@ -98,7 +104,8 @@ class AppSession extends ChangeNotifier {
   }
 
   /// The session for a web view, refreshed first when it is about to expire.
-  /// Null when signed out or when the refresh fails.
+  /// Null when signed out or when the refresh is refused; throws
+  /// [SessionUnavailable] when the server can't be reached.
   Future<Map<String, Object?>?> webSessionPayload() async {
     var session = _auth.currentSession;
     if (session == null) return null;
@@ -106,6 +113,8 @@ class AppSession extends ChangeNotifier {
     if (expiresAt - DateTime.now().millisecondsSinceEpoch ~/ 1000 <= tokenMarginSeconds) {
       try {
         session = (await _auth.refreshSession()).session;
+      } on AuthRetryableFetchException {
+        throw const SessionUnavailable();
       } on AuthException {
         return null;
       }

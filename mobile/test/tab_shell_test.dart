@@ -8,6 +8,10 @@ import 'package:material_ui/material_ui.dart';
 import 'fakes.dart';
 
 class FakeWebTab implements WebTabDriver {
+  FakeWebTab({this.pushResult = true});
+
+  bool pushResult;
+  int pushes = 0;
   final paths = <String>[];
   String current = '/';
   int cartReloads = 0;
@@ -27,14 +31,28 @@ class FakeWebTab implements WebTabDriver {
   @override
   Future<bool> goBack() async => false;
   @override
+  Future<bool> pushSession() async {
+    pushes++;
+    return pushResult;
+  }
+
+  @override
   void dispose() {}
 }
 
-Future<FakeWebTab> pumpShell(WidgetTester tester, {CartRepo? cart, FakeSession? session}) async {
-  final web = FakeWebTab();
+late BridgeHandlers handlers;
+
+Future<FakeWebTab> pumpShell(WidgetTester tester, {CartRepo? cart, FakeSession? session, FakeWebTab? webTab}) async {
+  final web = webTab ?? FakeWebTab();
   await tester.pumpWidget(MaterialApp(
     theme: craftCebuTheme(),
-    home: TabShell(services: fakeServices(cart: cart, session: session), webTabFactory: (BridgeHandlers _) => web),
+    home: TabShell(
+      services: fakeServices(cart: cart, session: session),
+      webTabFactory: (h) {
+        handlers = h;
+        return web;
+      },
+    ),
   ));
   await tester.pump();
   return web;
@@ -90,5 +108,21 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
     expect(web.paths, isNot(contains('/orders/abc')));
+  });
+
+  testWidgets('a sign-in request while signed in lends the session, then opens the page once', (tester) async {
+    final web = await pumpShell(tester, session: FakeSession(signedInAs: 'u1'));
+    handlers.onLogin('/orders');
+    handlers.onLogin('/orders');
+    await tester.pumpAndSettle();
+    expect(web.pushes, 1);
+    expect(web.paths, ['/orders']);
+  });
+
+  testWidgets('no page loop when the session could not be lent', (tester) async {
+    final web = await pumpShell(tester, session: FakeSession(signedInAs: 'u1'), webTab: FakeWebTab(pushResult: false));
+    handlers.onLogin('/orders');
+    await tester.pumpAndSettle();
+    expect(web.paths, isEmpty);
   });
 }
